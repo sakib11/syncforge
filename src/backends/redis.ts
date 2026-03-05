@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * Redis storage backend.
  *
  * Uses ioredis (optional peer dependency) to persist records in Redis hashes.
@@ -48,7 +48,7 @@ export class RedisBackend implements StorageBackend {
       Redis = require('ioredis') as typeof Redis;
     } catch {
       throw new Error(
-        '[DataSyncEngine] Redis backend requires the "ioredis" package. ' +
+        '[SyncForge] Redis backend requires the "ioredis" package. ' +
           'Install it with: npm install ioredis'
       );
     }

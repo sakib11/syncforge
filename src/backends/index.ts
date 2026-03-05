@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * Backend factory and barrel exports.
  */
 
@@ -24,25 +24,25 @@ export function createBackend(config: SyncEngineConfig): StorageBackend {
 
     case 'filesystem':
       if (!config.filesystemConfig) {
-        throw new Error('[DataSyncEngine] filesystemConfig is required for the filesystem backend.');
+        throw new Error('[SyncForge] filesystemConfig is required for the filesystem backend.');
       }
       return new FilesystemBackend(config.filesystemConfig.directory);
 
     case 'redis':
       if (!config.redisConfig) {
-        throw new Error('[DataSyncEngine] redisConfig is required for the redis backend.');
+        throw new Error('[SyncForge] redisConfig is required for the redis backend.');
       }
       return new RedisBackend(config.redisConfig);
 
     case 's3':
       if (!config.s3Config) {
-        throw new Error('[DataSyncEngine] s3Config is required for the s3 backend.');
+        throw new Error('[SyncForge] s3Config is required for the s3 backend.');
       }
       return new S3Backend(config.s3Config);
 
     default: {
       const exhaustive: never = config.backend;
-      throw new Error(`[DataSyncEngine] Unknown backend type: ${exhaustive}`);
+      throw new Error(`[SyncForge] Unknown backend type: ${exhaustive}`);
     }
   }
 }

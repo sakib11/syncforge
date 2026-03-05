@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * Amazon S3 storage backend.
  *
  * Stores records as individual JSON objects in S3 under the key pattern:
@@ -45,7 +45,7 @@ export class S3Backend implements StorageBackend {
       sdk = require('@aws-sdk/client-s3') as Record<string, unknown>;
     } catch {
       throw new Error(
-        '[DataSyncEngine] S3 backend requires the "@aws-sdk/client-s3" package. ' +
+        '[SyncForge] S3 backend requires the "@aws-sdk/client-s3" package. ' +
           'Install it with: npm install @aws-sdk/client-s3'
       );
     }

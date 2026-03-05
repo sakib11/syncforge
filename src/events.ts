@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * Typed EventEmitter that works in Node.js, browser, and edge runtimes.
  *
  * This is a minimal implementation that does not depend on Node's `events`
@@ -28,7 +28,7 @@ export class SyncEventEmitter {
 
     if (set.size >= this.maxListeners) {
       console.warn(
-        `[DataSyncEngine] Warning: more than ${this.maxListeners} listeners ` +
+        `[SyncForge] Warning: more than ${this.maxListeners} listeners ` +
         `for event "${event}". Possible memory leak.`
       );
     }
@@ -88,7 +88,7 @@ export class SyncEventEmitter {
         handler(data);
       } catch (err) {
         console.error(
-          `[DataSyncEngine] Error in "${event}" handler:`,
+          `[SyncForge] Error in "${event}" handler:`,
           err
         );
       }

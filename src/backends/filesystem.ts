@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * Filesystem storage backend.
  *
  * Stores each collection as a directory and each record as a JSON file.

@@ -1,4 +1,4 @@
-# @sakib11/data-sync-engine
+# syncforge
 
 A TypeScript library for incremental and conflict-free data synchronization across multiple clients or databases. Supports CRDTs, timestamp-based merges, and offline-first workflows.
 
@@ -25,7 +25,7 @@ Users work without connectivity and sync when back online. The engine queues wri
 **Context:** A field-service app where technicians inspect equipment at remote sites with no cell coverage. They log findings on a tablet, and everything syncs to the company server when they return to the office.
 
 ```ts
-import { SyncEngine } from '@sakib11/data-sync-engine';
+import { SyncEngine } from 'syncforge';
 
 // On the tablet -- works offline with filesystem persistence
 const tablet = new SyncEngine({
@@ -193,7 +193,7 @@ Test sync logic between services with zero infrastructure using the in-memory ba
 **Context:** You are designing a sync protocol for a new app and want to validate conflict resolution behavior in unit tests before deploying anything.
 
 ```ts
-import { SyncEngine } from '@sakib11/data-sync-engine';
+import { SyncEngine } from 'syncforge';
 
 // No infrastructure needed -- pure in-memory
 const server = new SyncEngine({ clientId: 'server' });
@@ -228,7 +228,7 @@ console.log('Resolved:', await client2.get('docs', 'd1'));
 ## Installation
 
 ```bash
-npm install @sakib11/data-sync-engine
+npm install syncforge
 ```
 
 For Redis backend support:
@@ -246,7 +246,7 @@ npm install @aws-sdk/client-s3
 ## Quick Start
 
 ```ts
-import { SyncEngine } from '@sakib11/data-sync-engine';
+import { SyncEngine } from 'syncforge';
 
 const engine = new SyncEngine();
 
@@ -273,7 +273,7 @@ await engine.destroy();
 Pass any subset of options to the constructor. All fields have sensible defaults.
 
 ```ts
-import { SyncEngine } from '@sakib11/data-sync-engine';
+import { SyncEngine } from 'syncforge';
 
 const engine = new SyncEngine({
   backend: 'memory',           // 'memory' | 'redis' | 's3' | 'filesystem'
@@ -437,7 +437,7 @@ console.log(result);
 ### Two-Client Sync Example
 
 ```ts
-import { SyncEngine } from '@sakib11/data-sync-engine';
+import { SyncEngine } from 'syncforge';
 
 // Client A
 const clientA = new SyncEngine({ clientId: 'client-a' });
@@ -672,7 +672,7 @@ The library exposes its CRDT building blocks for advanced use cases.
 A Last-Writer-Wins Register. Concurrent writes are resolved by timestamp; ties are broken by `clientId`.
 
 ```ts
-import { LWWRegister } from '@sakib11/data-sync-engine';
+import { LWWRegister } from 'syncforge';
 
 const reg = new LWWRegister('initial', 1000, 'client-a');
 
@@ -698,7 +698,7 @@ const restored = LWWRegister.from(state);
 A Last-Writer-Wins Map where each key is backed by an `LWWRegister`. Enables field-level conflict resolution.
 
 ```ts
-import { LWWMap } from '@sakib11/data-sync-engine';
+import { LWWMap } from 'syncforge';
 
 const map = new LWWMap();
 map.set('name', 'Alice', 1000, 'client-a');
@@ -721,8 +721,8 @@ console.log(map.get('age'));   // 30 (preserved from original)
 ### Merging StoredRecords with LWWMap
 
 ```ts
-import { LWWMap } from '@sakib11/data-sync-engine';
-import type { StoredRecord } from '@sakib11/data-sync-engine';
+import { LWWMap } from 'syncforge';
+import type { StoredRecord } from 'syncforge';
 
 const local: StoredRecord = {
   id: '1', name: 'Alice', age: 31,
@@ -746,7 +746,7 @@ const { merged, conflictedFields } = LWWMap.mergeRecords(local, remote);
 Classify remote records as added, updated, deleted, or unchanged relative to a local record map.
 
 ```ts
-import { computeDelta } from '@sakib11/data-sync-engine';
+import { computeDelta } from 'syncforge';
 
 const localMap = new Map([['1', localRecord]]);
 const delta = computeDelta(localMap, remoteRecords);
@@ -758,7 +758,7 @@ const delta = computeDelta(localMap, remoteRecords);
 Resolve a single conflict between two records.
 
 ```ts
-import { resolveConflict } from '@sakib11/data-sync-engine';
+import { resolveConflict } from 'syncforge';
 
 const detail = resolveConflict('users', localRecord, remoteRecord, 'crdt');
 console.log(detail.resolvedRecord);
@@ -770,7 +770,7 @@ console.log(detail.fieldsConflicted);
 Instantiate a storage backend from a resolved config object.
 
 ```ts
-import { createBackend, resolveConfig } from '@sakib11/data-sync-engine';
+import { createBackend, resolveConfig } from 'syncforge';
 
 const config = resolveConfig({ backend: 'memory' });
 const backend = createBackend(config);
@@ -785,7 +785,7 @@ await backend.destroy();
 All backends implement this interface. You can create a custom backend by implementing it:
 
 ```ts
-import type { StorageBackend, StoredRecord } from '@sakib11/data-sync-engine';
+import type { StorageBackend, StoredRecord } from 'syncforge';
 
 class MyCustomBackend implements StorageBackend {
   async get(collection: string, id: string): Promise<StoredRecord | null> { /* ... */ }
@@ -834,7 +834,7 @@ import type {
   RedisConfig,
   S3Config,
   FilesystemConfig,
-} from '@sakib11/data-sync-engine';
+} from 'syncforge';
 ```
 
 ## Lifecycle
@@ -854,7 +854,7 @@ engine.startAutoSync();
 await engine.destroy();
 
 // After destroy, all operations throw
-await engine.put('users', { id: '1' }); // throws '[DataSyncEngine] Engine has been destroyed.'
+await engine.put('users', { id: '1' }); // throws '[SyncForge] Engine has been destroyed.'
 ```
 
 ## Development

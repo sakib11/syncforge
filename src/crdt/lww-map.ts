@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * Last-Writer-Wins Element Map (LWW-Map) CRDT
  *
  * An observed-remove map where each key is backed by an LWW-Register.

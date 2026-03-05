@@ -1,6 +1,6 @@
 /**
- * @sakib11/data-sync-engine
- * Type definitions for the Data Sync Engine
+ * syncforge
+ * Type definitions for SyncForge
  */
 
 // ─── Record Types ────────────────────────────────────────────────────────────

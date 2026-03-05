@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  *
  * A library for incremental and conflict-free data synchronisation across
  * multiple clients or databases. Supports CRDTs, timestamp-based merges,

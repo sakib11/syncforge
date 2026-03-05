@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * In-memory storage backend.
  *
  * Data is stored in nested Maps and does not survive process restarts.

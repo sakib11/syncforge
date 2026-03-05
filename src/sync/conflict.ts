@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * Conflict resolution strategies.
  *
  * Two strategies are supported:

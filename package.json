@@ -1,5 +1,5 @@
 {
-  "name": "@sakib11/data-sync-engine",
+  "name": "syncforge",
   "version": "1.0.0",
   "description": "A library for incremental and conflict-free data synchronization across multiple clients or databases. Supports CRDTs, timestamp-based merges, and offline-first workflows.",
   "main": "dist/index.js",
@@ -34,11 +34,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sakib11/data-sync-engine"
+    "url": "https://github.com/sakib11/syncforge"
   },
-  "homepage": "https://github.com/sakib11/data-sync-engine#readme",
+  "homepage": "https://github.com/sakib11/syncforge#readme",
   "bugs": {
-    "url": "https://github.com/sakib11/data-sync-engine/issues"
+    "url": "https://github.com/sakib11/syncforge/issues"
   },
   "engines": {
     "node": ">=16.0.0"

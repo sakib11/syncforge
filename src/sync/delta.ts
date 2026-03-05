@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * Delta computation — compares local state against incoming remote records
  * and classifies each record as added, updated, deleted, or unchanged.
  */

@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * SyncEngine — the main public API for data synchronisation.
  *
  * Coordinates storage backends, conflict resolution, delta computation,
@@ -333,7 +333,7 @@ export class SyncEngine {
 
   private assertNotDestroyed(): void {
     if (this.destroyed) {
-      throw new Error('[DataSyncEngine] Engine has been destroyed.');
+      throw new Error('[SyncForge] Engine has been destroyed.');
     }
   }
 

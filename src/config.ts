@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * Default configuration with sensible defaults
  */
 
@@ -42,34 +42,34 @@ export function resolveConfig(options: Partial<SyncEngineConfig>): SyncEngineCon
   // Validate backend-specific configuration
   if (config.backend === 'redis' && !config.redisConfig) {
     throw new Error(
-      '[DataSyncEngine] Redis backend selected but no redisConfig provided. ' +
+      '[SyncForge] Redis backend selected but no redisConfig provided. ' +
       'Please provide { host, port } at minimum.'
     );
   }
 
   if (config.backend === 's3' && !config.s3Config) {
     throw new Error(
-      '[DataSyncEngine] S3 backend selected but no s3Config provided. ' +
+      '[SyncForge] S3 backend selected but no s3Config provided. ' +
       'Please provide { bucket, region } at minimum.'
     );
   }
 
   if (config.backend === 'filesystem' && !config.filesystemConfig) {
     throw new Error(
-      '[DataSyncEngine] Filesystem backend selected but no filesystemConfig provided. ' +
+      '[SyncForge] Filesystem backend selected but no filesystemConfig provided. ' +
       'Please provide { directory } at minimum.'
     );
   }
 
   if (config.autoSyncInterval < 1000) {
     throw new Error(
-      '[DataSyncEngine] autoSyncInterval must be at least 1000ms.'
+      '[SyncForge] autoSyncInterval must be at least 1000ms.'
     );
   }
 
   if (config.batchSize < 1) {
     throw new Error(
-      '[DataSyncEngine] batchSize must be at least 1.'
+      '[SyncForge] batchSize must be at least 1.'
     );
   }
 

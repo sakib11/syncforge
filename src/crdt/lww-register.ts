@@ -1,5 +1,5 @@
 /**
- * @sakib11/data-sync-engine
+ * syncforge
  * Last-Writer-Wins Register (LWW-Register) CRDT
  *
  * A convergent replicated data type where concurrent writes are resolved
