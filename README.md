@@ -14,6 +14,217 @@ A TypeScript library for incremental and conflict-free data synchronization acro
 - **Offline-first** -- write locally, sync when connectivity is available
 - **Zero required dependencies** -- Redis and S3 backends use optional peer dependencies
 
+## When to Use
+
+This library is a **data synchronization layer**, not a database or UI framework. It runs anywhere Node.js runs -- frontend, backend, edge, or embedded. The core problem it solves is: **multiple independent writers need to converge to a consistent state**.
+
+### Offline-First Mobile / Desktop Apps
+
+Users work without connectivity and sync when back online. The engine queues writes locally and merges seamlessly on reconnect.
+
+**Context:** A field-service app where technicians inspect equipment at remote sites with no cell coverage. They log findings on a tablet, and everything syncs to the company server when they return to the office.
+
+```ts
+import { SyncEngine } from '@sakib11/data-sync-engine';
+
+// On the tablet -- works offline with filesystem persistence
+const tablet = new SyncEngine({
+  clientId: 'technician-42',
+  backend: 'filesystem',
+  filesystemConfig: { directory: './local-data' },
+  conflictStrategy: 'crdt',
+});
+
+// Technician logs an inspection offline
+await tablet.put('inspections', {
+  id: 'insp-001',
+  equipmentId: 'pump-7',
+  status: 'needs-repair',
+  notes: 'Bearing noise detected',
+});
+
+// Later, back at the office -- push changes to the server
+const changes = await tablet.getChangesSince('inspections', lastSyncTimestamp);
+const response = await fetch('/api/sync/inspections', {
+  method: 'POST',
+  body: JSON.stringify(changes),
+});
+const serverRecords = await response.json();
+await tablet.sync('inspections', serverRecords);
+```
+
+### Multi-Device Sync
+
+The same user edits data on multiple devices. Changes made on any device propagate to all others.
+
+**Context:** A note-taking app where a user drafts notes on their phone during a commute and continues editing on their laptop at home.
+
+```ts
+// Phone instance
+const phone = new SyncEngine({ clientId: 'phone', conflictStrategy: 'crdt' });
+await phone.put('notes', { id: 'n1', title: 'Meeting Notes', body: 'Discuss Q3 targets' });
+
+// Laptop instance
+const laptop = new SyncEngine({ clientId: 'laptop', conflictStrategy: 'crdt' });
+
+// Sync phone → laptop
+const phoneRecords = await phone.getAll('notes');
+await laptop.sync('notes', phoneRecords);
+
+// User edits title on laptop, body on phone (different fields, no conflict)
+await laptop.put('notes', { id: 'n1', title: 'Q3 Planning Notes', body: 'Discuss Q3 targets' });
+await phone.put('notes', { id: 'n1', title: 'Meeting Notes', body: 'Discuss Q3 targets\n- Revenue goals' });
+
+// Sync both ways -- CRDT preserves both field changes
+const laptopRecords = await laptop.getAll('notes');
+await phone.sync('notes', laptopRecords);
+const updatedPhone = await phone.getAll('notes');
+await laptop.sync('notes', updatedPhone);
+
+// Both devices now have:
+//   title: 'Q3 Planning Notes'  (from laptop -- higher timestamp)
+//   body:  'Discuss Q3 targets\n- Revenue goals'  (from phone -- higher timestamp)
+```
+
+### Collaborative Record Editing
+
+Multiple users on a team edit shared records concurrently. The CRDT strategy ensures edits to different fields never overwrite each other.
+
+**Context:** A shared project management board where one team member updates a task's status while another adds an assignee at the same time.
+
+```ts
+const alice = new SyncEngine({ clientId: 'alice', conflictStrategy: 'crdt' });
+const bob = new SyncEngine({ clientId: 'bob', conflictStrategy: 'crdt' });
+
+// Both start with the same task (synced earlier)
+const task = { id: 'task-1', title: 'Deploy v2', status: 'in-progress', assignee: 'alice' };
+await alice.getBackend().set('tasks', { ...task, _version: 1, _timestamp: 1000, _deleted: false, _clientId: 'seed' });
+await bob.getBackend().set('tasks', { ...task, _version: 1, _timestamp: 1000, _deleted: false, _clientId: 'seed' });
+
+// Alice marks the task done
+await alice.put('tasks', { id: 'task-1', title: 'Deploy v2', status: 'done', assignee: 'alice' });
+
+// Bob reassigns it (concurrently, before seeing Alice's change)
+await bob.put('tasks', { id: 'task-1', title: 'Deploy v2', status: 'in-progress', assignee: 'bob' });
+
+// Sync Bob's changes into Alice
+const bobRecords = await bob.getAll('tasks');
+const result = await alice.sync('tasks', bobRecords);
+
+// CRDT merge result:
+//   status: 'done' or 'in-progress' (whichever had the later timestamp wins)
+//   assignee: 'bob' (Bob's timestamp is later for this field)
+//   Both edits are tracked in result.conflicts[0].fieldsConflicted
+console.log(`Conflicts resolved: ${result.conflicts.length}`);
+```
+
+### Edge / IoT Data Collection
+
+Devices at the edge collect data locally and batch-sync to a central store on a schedule.
+
+**Context:** Temperature sensors in a warehouse write readings to the local filesystem every second. An hourly cron job syncs the accumulated data to S3 for long-term storage.
+
+```ts
+// On the edge device -- collect readings locally
+const sensor = new SyncEngine({
+  clientId: 'sensor-warehouse-3',
+  backend: 'filesystem',
+  filesystemConfig: { directory: '/var/sensor-data' },
+});
+
+// Runs every second
+async function recordReading(temperature: number) {
+  await sensor.put('readings', {
+    id: `r-${Date.now()}`,
+    temperature,
+    location: 'warehouse-3',
+  });
+}
+
+// Hourly cron job: push to the central S3 store
+async function syncToCloud(centralEngine: SyncEngine) {
+  const changes = await sensor.getChangesSince('readings', lastSyncTimestamp);
+  if (changes.length > 0) {
+    await centralEngine.sync('readings', changes);
+    lastSyncTimestamp = Date.now();
+    console.log(`Synced ${changes.length} readings to cloud`);
+  }
+}
+```
+
+### Microservice Replication
+
+Backend services in different regions each maintain a local cache and periodically reconcile with a shared data store.
+
+**Context:** A product catalog API runs in US-East and EU-West. Each region has a Redis cache for low-latency reads. Changes are synced bidirectionally every 30 seconds so both regions converge.
+
+```ts
+// US-East service
+const usEast = new SyncEngine({
+  clientId: 'us-east-1',
+  backend: 'redis',
+  redisConfig: { host: 'redis-us-east.internal', port: 6379 },
+  autoSync: true,
+  autoSyncInterval: 30_000,
+});
+
+// EU-West service
+const euWest = new SyncEngine({
+  clientId: 'eu-west-1',
+  backend: 'redis',
+  redisConfig: { host: 'redis-eu-west.internal', port: 6379 },
+  autoSync: true,
+  autoSyncInterval: 30_000,
+});
+
+// Each region's auto-sync handler fetches changes from the other region
+usEast.events.on('sync:start', async ({ collection }) => {
+  const remoteChanges = await fetchChangesFromRegion('eu-west', collection, lastSyncTimestamp);
+  if (remoteChanges.length > 0) {
+    await usEast.sync(collection, remoteChanges);
+  }
+});
+```
+
+### Prototyping Distributed Sync
+
+Test sync logic between services with zero infrastructure using the in-memory backend before committing to Redis or S3.
+
+**Context:** You are designing a sync protocol for a new app and want to validate conflict resolution behavior in unit tests before deploying anything.
+
+```ts
+import { SyncEngine } from '@sakib11/data-sync-engine';
+
+// No infrastructure needed -- pure in-memory
+const server = new SyncEngine({ clientId: 'server' });
+const client1 = new SyncEngine({ clientId: 'client-1', conflictStrategy: 'crdt' });
+const client2 = new SyncEngine({ clientId: 'client-2', conflictStrategy: 'crdt' });
+
+// Simulate concurrent writes
+await client1.put('docs', { id: 'd1', title: 'Draft', author: 'Alice' });
+await client2.put('docs', { id: 'd1', title: 'Final', author: 'Bob' });
+
+// Test the merge
+const c1Records = await client1.getAll('docs');
+const result = await client2.sync('docs', c1Records);
+console.log('Conflicts:', result.conflicts.length);
+console.log('Resolved:', await client2.get('docs', 'd1'));
+
+// Swap backend to Redis when ready for production -- same API, same logic
+// const prod = new SyncEngine({ backend: 'redis', redisConfig: { ... } });
+```
+
+## When NOT to Use
+
+| Scenario | Why | Use Instead |
+|----------|-----|-------------|
+| **Real-time character-level collaboration** (Google Docs-style) | This library operates at the record/field level, not individual character positions or text ranges | [Yjs](https://github.com/yjs/yjs), [Automerge](https://github.com/automerge/automerge) |
+| **High-throughput transactional workloads** | No query language, no indexes, no ACID transactions. Not designed for thousands of writes per second | PostgreSQL, MySQL, DynamoDB |
+| **Strong consistency requirements** | The engine is eventually consistent by design. There is no guarantee that a read immediately reflects a remote write | A centralized database with synchronous replication |
+| **Large binary files** (images, videos, archives) | Records are serialized as JSON. Storing and diffing multi-megabyte blobs is inefficient | Object storage (S3, GCS) with a separate metadata sync |
+| **Single-writer systems** | If only one process ever writes data, there are no conflicts to resolve. A regular database is simpler and faster | Any standard database or key-value store |
+| **Complex relational queries** | No joins, no aggregations, no filtering beyond `getAll` and `getChangesSince` | SQLite, PostgreSQL, or an ORM layer |
+
 ## Installation
 
 ```bash
