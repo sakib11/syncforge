@@ -1,0 +1,63 @@
+{
+  "name": "@sakib11/data-sync-engine",
+  "version": "1.0.0",
+  "description": "A library for incremental and conflict-free data synchronization across multiple clients or databases. Supports CRDTs, timestamp-based merges, and offline-first workflows.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "sync",
+    "data-sync",
+    "crdt",
+    "conflict-resolution",
+    "incremental-sync",
+    "offline-first",
+    "replication",
+    "distributed-systems",
+    "real-time",
+    "merge",
+    "redis",
+    "s3",
+    "typescript"
+  ],
+  "author": "sakib11",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sakib11/data-sync-engine"
+  },
+  "homepage": "https://github.com/sakib11/data-sync-engine#readme",
+  "bugs": {
+    "url": "https://github.com/sakib11/data-sync-engine/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "peerDependencies": {
+    "ioredis": "^5.0.0",
+    "@aws-sdk/client-s3": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ioredis": {
+      "optional": true
+    },
+    "@aws-sdk/client-s3": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "@types/node": "^20.11.0"
+  }
+}
